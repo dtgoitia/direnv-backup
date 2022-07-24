@@ -1,0 +1,14 @@
+{
+  "root_dir": "/home/dtg/projects",
+  "exclude": [
+    "__pycache__",
+    ".git",
+    ".pytest_cache",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "build",
+    "htmlcov",
+    "node_modules"
+  ]
+}

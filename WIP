@@ -1,0 +1,2 @@
+- interpolate envvars in config paths
+  - pro: not necessary to hardcode a value in the config
