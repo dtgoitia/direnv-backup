@@ -1,0 +1,15 @@
+{
+  "root_dir": "/app",
+  "exclude": [
+    "__pycache__",
+    ".git",
+    ".pytest_cache",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "build",
+    "htmlcov",
+    "node_modules"
+  ],
+  "backup_dir": "/home/rootless/backups"
+}

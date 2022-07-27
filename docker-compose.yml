@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  direnv-guardian:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: direnv-guardian
+    container_name: direnv-guardian
+    command: python -m src.cli
+
+    # I want to be me!
+    # user: ${CURRENT_UID}
+
+    volumes:
+      - ".:/app"

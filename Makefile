@@ -41,3 +41,9 @@ format:
 
 test:
 	pytest . -vv -s
+
+shell_in_container:
+	docker-compose run --rm direnv-guardian bash
+
+rebuild_container_image:
+	docker-compose build direnv-guardian

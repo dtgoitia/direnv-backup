@@ -74,6 +74,8 @@ def read_config(path: Path) -> Config:
     """
 
     raw_config = path.read_text()
+    if not raw_config:
+        raise ConfigError("Config file is empty")
 
     # interpolate environemnt variables
     # TODO

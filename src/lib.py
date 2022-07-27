@@ -20,9 +20,12 @@ class Snapshot:
 
 
 def scan_direnv_files(config: Config) -> Snapshot:
+    start_path = config.root_dir
+    logger.debug(f"Scanning direnv files in {start_path}")
+
     direnv_files: set[Path] = set()
 
-    stack: list[Path] = [config.root_dir]
+    stack: list[Path] = [start_path]
     while True:
         if not stack:
             break
