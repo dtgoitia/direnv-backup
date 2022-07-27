@@ -1,5 +1,8 @@
 FROM python:3.10.5-slim-buster
 
+RUN apt-get update \
+  && apt-get -yy install gpg
+
 RUN adduser rootless
 USER rootless
 

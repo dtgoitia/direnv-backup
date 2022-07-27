@@ -1,7 +1,7 @@
-import os
 import shutil
-from dataclasses import replace
 from pathlib import Path
+
+import pytest
 
 from src.cli.backup import backup
 from src.lib import Config, restore_backup
@@ -79,3 +79,33 @@ def test_kk(tmp_path: Path):
 
     # Assert
     assert_root_directory_is_healthy()
+
+
+@pytest.mark.skip(reason="TODO")
+def test_exit_if_config_file_does_not_exist():
+    ...
+
+
+@pytest.mark.skip(reason="TODO")
+def test_exit_if_config_file_is_empty():
+    ...
+
+
+@pytest.mark.skip(reason="TODO")
+def test_exit_if_config_file_is_not_valid_json():
+    ...
+
+
+@pytest.mark.skip(reason="TODO")
+def test_exit_if_config_is_not_valid():
+    ...
+
+
+@pytest.mark.skip(reason="TODO")
+def test_delete_temporary_tar_if_gpg_not_installed():
+    ...
+
+
+@pytest.mark.skip(reason="TODO")
+def test_delete_temporary_tar_if_no_key_found_for_provided_recipient():
+    ...

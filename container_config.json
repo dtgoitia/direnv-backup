@@ -11,5 +11,7 @@
     "htmlcov",
     "node_modules"
   ],
-  "backup_dir": "/home/rootless/backups"
+  "backup_dir": "/home/rootless/backups",
+  "encrypt_backup": true,
+  "encryption_recipient": "john@doe.com"
 }

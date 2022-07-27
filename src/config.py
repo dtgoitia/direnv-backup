@@ -15,7 +15,7 @@ Email = str
 class Config:
     root_dir: Path  # top of the filesystem where to start scanning for direnv files
     backup_dir: Path  # folder where the backup will be stored
-    exclude: list[str]  # patterns to ignore while scanning direnv files
+    exclude: list[str] = list  # patterns to ignore while scanning direnv files
     #
     # If true, encrypt the tar file
     # this way you can start using it with Dropbox without encryption if you want to
@@ -67,6 +67,17 @@ def try_loading_config_from_cli():
     raise NotImplementedError()
 
 
+def validate_config(config: Config) -> None:
+    if config.encrypt_backup and not config.encryption_recipient:
+        raise ConfigError(
+            "Encryption is enabled (by default), but no recipient is specified. Please,"
+            " either specify a recipient in the config file, or explictly disable"
+            " encryption in the config file."
+        )
+    else:
+        logger.debug("Configuration validation: encryption disabled")
+
+
 def read_config(path: Path) -> Config:
     """
     Assumption: path exists
@@ -82,11 +93,19 @@ def read_config(path: Path) -> Config:
     interpolated_config = raw_config
 
     # parse from JSON string
-    config_data = json.loads(interpolated_config)
+    try:
+        config_data = json.loads(interpolated_config)
+    except json.JSONDecodeError:
+        raise ConfigError(f"Provided config file contains invalid JSON")
+
     config = Config(
         root_dir=Path(config_data["root_dir"]),
         exclude=set(config_data["exclude"]),
         backup_dir=Path(config_data["backup_dir"]),
+        encrypt_backup=config_data.get("encrypt_backup"),
+        encryption_recipient=config_data.get("encryption_recipient"),
     )
+
+    validate_config(config=config)
 
     return config

@@ -1,14 +1,13 @@
 import datetime
 import json
 import logging
-import os
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
 from src.archive import archive_dir, extract
 from src.config import Config
-from src.encrypt import decrypt, encrypt
+from src.encrypt import EncryptionError, decrypt, encrypt
 
 logger = logging.getLogger(__name__)
 
@@ -106,10 +105,9 @@ def archive_snapshot(config: Config) -> Path:
 
 
 def encrypt_archive(archive_path: Path, config: Config) -> None:
-    logger.debug(f"Encrypting {archive_path}")
-
     encrypted_path = archive_path.with_suffix(".gpg")
 
+    logger.debug(f"Attempting to encrypt {archive_path}")
     encrypt(
         path_to_encrypt=archive_path,
         encrypted_path=encrypted_path,
@@ -125,9 +123,13 @@ def backup(config: Config) -> None:
     archive_path = archive_snapshot(config=config)
 
     if config.encrypt_backup:
-        encrypt_archive(archive_path=archive_path, config=config)
-        logger.debug(f"Cleaning up temporary archive: {archive_path}")
-        archive_path.unlink()
+        try:
+            encrypt_archive(archive_path=archive_path, config=config)
+        except EncryptionError:
+            raise
+        finally:
+            logger.debug(f"Cleaning up temporary archive: {archive_path}")
+            archive_path.unlink()
 
 
 # TODO: add support for dry run printing to console
