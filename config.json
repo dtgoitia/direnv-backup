@@ -10,5 +10,6 @@
     "build",
     "htmlcov",
     "node_modules"
-  ]
+  ],
+  "backup_dir": "/home/dtg/projects/backup-direnv-files-python/backups"
 }
