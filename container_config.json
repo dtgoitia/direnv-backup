@@ -1,5 +1,5 @@
 {
-  "root_dir": "/app",
+  "root_dir": "/home/rootless",
   "exclude": [
     "__pycache__",
     ".git",

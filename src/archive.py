@@ -27,6 +27,7 @@ def archive_dir(dir: Path, base: Path, output: Path) -> Path:
         files = (path for path in dir.rglob("*") if path.is_file())
         for file_path in files:
             file_path_in_archive = file_path.relative_to(base)
+            logger.debug(f"Adding file to archive as {file_path_in_archive}")
             tar.add(file_path, arcname=file_path_in_archive)
 
     return output

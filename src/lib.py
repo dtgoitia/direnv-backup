@@ -165,7 +165,7 @@ def restore_file(backup: Path, config: Config) -> None:
     # Stripe anything path parts above the top parent, including the top parent itself
     relative_path = relative_to_tmp_dir.relative_to(top_parent)
     final_path = config.root_dir / relative_path
-    print(f"Restoring {backup} to {final_path}")
+    logger.debug(f"Restoring {backup} to {final_path}")
     copy_file(src=backup, dst=final_path)
 
 

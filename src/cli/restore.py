@@ -4,7 +4,7 @@ from pathlib import Path
 
 from src.config import ConfigError, read_config
 from src.encrypt import EncryptionError
-from src.lib import backup
+from src.lib import restore_backup
 from src.logging import set_up_logging_config
 
 logger = logging.getLogger(__name__)
@@ -43,6 +43,6 @@ if __name__ == "__main__":
     logger.debug(f"Config loaded: {config}")
 
     try:
-        backup(config=config)
+        restore_backup(config=config)
     except EncryptionError as error:
         exit(error)
