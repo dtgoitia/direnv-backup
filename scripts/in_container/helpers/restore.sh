@@ -4,4 +4,3 @@
 set -e
 
 python -m src.cli.restore --verbose --config=container_config.json
-# python -m src.cli.restore --config=container_config.json

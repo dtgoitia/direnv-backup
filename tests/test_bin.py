@@ -4,7 +4,8 @@ from pathlib import Path
 import pytest
 
 from src.cli.backup import backup
-from src.lib import Config, restore_backup
+from src.config import Config
+from src.lib import restore_backup
 
 
 def create_envrc(path: Path) -> None:

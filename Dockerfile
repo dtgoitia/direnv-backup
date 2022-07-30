@@ -1,11 +1,16 @@
-FROM python:3.10.5-slim-buster
+FROM archlinux:base-devel-20220724.0.70393
 
-RUN apt-get update \
-  && apt-get -yy install gpg
+RUN pacman -Syu gnupg fish --noconfirm
+RUN pacman -Syu python --noconfirm
 
 ENV USER=rootless
 
-RUN adduser $USER
+RUN useradd $USER
+RUN echo "$USER ALL=(ALL:ALL) ALL" >> /etc/sudoers
+#              ^ this is a tab
+RUN echo $USER:123 | chpasswd
+RUN mkdir -p /home/$USER
+RUN chown $USER: /home/$USER
 USER $USER
 
 ENV PYTHONUNBUFFERED 1

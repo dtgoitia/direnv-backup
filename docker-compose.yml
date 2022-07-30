@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     image: direnv-guardian
     container_name: direnv-guardian
-    command: python -m src.cli
+    command: fish
 
     # I want to be me!
     # user: ${CURRENT_UID}
