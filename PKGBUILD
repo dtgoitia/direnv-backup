@@ -17,13 +17,15 @@ conflicts=($_name "${_name}-git" "${_name}-bin")
 license=("GLP3")
 depends=(python)
 makedepends=(git python-build python-installer)
-srcdir="src"
 # prepare() {
 #     git clone $source --single-branch
 # }
 
 build () {
-    python -m build --wheel --no-isolation .
+    # cd ..
+    # python -m src.cli.backup --help   < OK
+    python -c "import sys; print(sys.path)"
+    # python setup.py build
 }
 
 package() {
@@ -36,10 +38,9 @@ package() {
     # printenv
     # echo ""
 
-    echo "a: $pkgdir/usr/bin"
-    dst=$(pwd)
-    echo "dst = $dst"
-    # install -D -m 755 -t "$pkgdir/usr/bin" $dst
-    python-build --help
+    # echo "a: $pkgdir/usr/bin"
+    # dst=$(pwd)
+    # echo "dst = $dst"
+    python setup.py install --root="$pkgdir" --optimize=1
 }
 sha256sums=('521fdd6c83e9877ec311f1a763b645ce36e02fb0bb605fb9c474b7df465e8ee6')
