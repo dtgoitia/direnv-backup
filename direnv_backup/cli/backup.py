@@ -2,10 +2,10 @@ import argparse
 import logging
 from pathlib import Path
 
-from src.config import ConfigError, read_config
-from src.encrypt import EncryptionError
-from src.lib import restore_backup
-from src.logging import set_up_logging_config
+from direnv_backup.config import ConfigError, read_config
+from direnv_backup.encrypt import EncryptionError
+from direnv_backup.lib import backup
+from direnv_backup.logging import set_up_logging_config
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ def parse_arguments() -> argparse.Namespace:
     return args
 
 
-if __name__ == "__main__":
+def main() -> None:
     arguments = parse_arguments()
 
     set_up_logging_config(debug_mode_on=arguments.verbose)
@@ -43,6 +43,10 @@ if __name__ == "__main__":
     logger.debug(f"Config loaded: {config}")
 
     try:
-        restore_backup(config=config)
+        backup(config=config)
     except EncryptionError as error:
         exit(error)
+
+
+if __name__ == "__main__":
+    main()

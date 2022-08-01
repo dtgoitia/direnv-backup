@@ -2,7 +2,7 @@ import logging
 import subprocess
 from pathlib import Path
 
-from src.types import Email
+from direnv_backup.types import Email
 
 logger = logging.getLogger(__name__)
 

@@ -23,7 +23,7 @@ makedepends=(git python-build python-installer)
 
 build () {
     # cd ..
-    # python -m src.cli.backup --help   < OK
+    # python -m direnv_backup.cli.backup --help   < OK
     python -c "import sys; print(sys.path)"
     # python setup.py build
 }

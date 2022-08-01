@@ -5,9 +5,9 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
-from src.archive import archive_dir, extract
-from src.config import Config
-from src.encrypt import EncryptionError, decrypt, encrypt
+from direnv_backup.archive import archive_dir, extract
+from direnv_backup.config import Config
+from direnv_backup.encrypt import EncryptionError, decrypt, encrypt
 
 logger = logging.getLogger(__name__)
 

@@ -1,2 +1,8 @@
+- [x] Build wheel outside container using `python -m build --wheel` --> got wheel!
+- [x] In container, install wheel with pip --> worked
+- [ ] Find out how to invoke installed wheel
+  - Iterate: build outside container, install with `pip` inside container
+  - Added `[project.scripts]` section and built without errors
+
 - interpolate envvars in config paths
   - pro: not necessary to hardcode a value in the config

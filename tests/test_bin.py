@@ -3,9 +3,9 @@ from pathlib import Path
 
 import pytest
 
-from src.cli.backup import backup
-from src.config import Config
-from src.lib import restore_backup
+from direnv_backup.cli.backup import backup
+from direnv_backup.config import Config
+from direnv_backup.lib import restore_backup
 
 
 def create_envrc(path: Path) -> None:

@@ -1,7 +1,7 @@
 FROM archlinux:base-devel-20220724.0.70393
 
 RUN pacman -Syu gnupg fish --noconfirm
-RUN pacman -Syu python --noconfirm
+RUN pacman -Syu python python-pip --noconfirm
 
 ENV USER=rootless
 
