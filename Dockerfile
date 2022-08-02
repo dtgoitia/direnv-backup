@@ -11,6 +11,7 @@ RUN echo "$USER ALL=(ALL:ALL) ALL" >> /etc/sudoers
 RUN echo $USER:123 | chpasswd
 RUN mkdir -p /home/$USER
 RUN chown $USER: /home/$USER
+ENV PATH="${PATH}:/home/${USER}/.local/bin"
 USER $USER
 
 ENV PYTHONUNBUFFERED 1
