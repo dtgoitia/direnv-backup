@@ -19,11 +19,9 @@ classifiers = [
 # "Bug Tracker" = "https://github.com/pypa/sampleproject/issues"
 
 [build-system]
-requires = ["setuptools", "setuptools-scm"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project.scripts]
 direnvbackup = "direnv_backup.cli.backup:main"
 
-[options]
-package_dir = "direnv_backup"
