@@ -9,28 +9,29 @@ pkgrel=1
 pkgdesc="Tool to backup/restore direnv files with optional encryption"
 arch=("any")
 url="https://github.com/dtgoitia/${_name}"
-source=("https://github.com/dtgoitia/${_name}.git")
+# source=("https://github.com/dtgoitia/${_name}.git")
+source=("${_name}-${pkgver}::git+https://github.com/dtgoitia/${_name}.git")
+# source=("direnv_backup_sources::git+https://github.com/dtgoitia/direnv-backup.git?signed#tag=${pkgver}")
 
 
 provides=($_name)
 conflicts=($_name "${_name}-git" "${_name}-bin")
 license=("GLP3")
-depends=(python)
-makedepends=(git python-build python-installer)
-# prepare() {
-#     git clone $source --single-branch
-# }
+depends=("python")
+makedepends=("git" "python-build" "python-installer" "python-wheel")
 
 build () {
-    # cd ..
-    # python -m direnv_backup.cli.backup --help   < OK
-    python -c "import sys; print(sys.path)"
-    python setup.py build
+    pwd
+    cd "${srcdir}/${_name}-${pkgver}"
+    pwd
+
+    python -m build --wheel --outdir $srcdir
 }
 
 package() {
     pwd
-    # cd ..
+    cd "${srcdir}/${_name}-${pkgver}"
+    pwd
     # echo "Files:"
     # find .
     # echo ""
@@ -38,8 +39,5 @@ package() {
     # printenv
     # echo ""
 
-    # echo "a: $pkgdir/usr/bin"
-    # dst=$(pwd)
-    # echo "dst = $dst"
-    python setup.py install --root="$pkgdir" --optimize=1
+    python -m installer --destdir="$pkgdir" dist/*.whl
 }

@@ -13,4 +13,8 @@ services:
     # user: ${CURRENT_UID}
 
     volumes:
-      - ".:/app"
+      # # mount everything
+      # - ".:/app"
+      #
+      # mount only PKGBUILD
+      - "./PKGBUILD_files:/app"
