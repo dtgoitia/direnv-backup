@@ -6,7 +6,8 @@ RUN pacman -Syu python python-pip --noconfirm
 ENV USER=rootless
 
 RUN useradd $USER
-RUN echo "$USER ALL=(ALL:ALL) ALL" >> /etc/sudoers
+# RUN echo "$USER ALL=(ALL:ALL) ALL" >> /etc/sudoers
+RUN echo "$USER ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 #              ^ this is a tab
 RUN echo $USER:123 | chpasswd
 RUN mkdir -p /home/$USER
