@@ -48,7 +48,11 @@ def email_has_gpg_key_associated(email: Email) -> bool:
     return email_found_in_keys
 
 
-def encrypt(path_to_encrypt: Path, encrypted_path: Path, recipient: Email) -> Path:
+class GPGError(Exception):
+    ...
+
+
+def encrypt(path_to_encrypt: Path, encrypted_path: Path, recipient: Email) -> None:
     if not is_gpg_installed():
         error_message = "gpg is not installed"
         logger.debug(error_message)
@@ -62,23 +66,24 @@ def encrypt(path_to_encrypt: Path, encrypted_path: Path, recipient: Email) -> Pa
     cmd = [
         "gpg",
         "--output",
-        encrypted_path,
+        str(encrypted_path),
         "--encrypt",
         "--recipient",
         recipient,
-        path_to_encrypt,
+        str(path_to_encrypt),
     ]
     logger.debug(f'Executing {" ".join([str(x) for x in cmd])!r} ...')
     proc = subprocess.run(cmd, capture_output=True)
     stdout = proc.stdout.decode("utf-8")
     stderr = proc.stderr.decode("utf-8")
 
-    something_went_wrong = stdout or stderr
+    something_went_wrong = proc.returncode != 0
 
     if something_went_wrong:
         # TODO: handle this with the corresponding exceptions - if key missing, etc.
         print(f"{stdout=}")
         print(f"{stderr=}")
+        raise GPGError(stderr)
 
     logger.debug(f"Encryption output: {encrypted_path}")
 
@@ -92,20 +97,21 @@ def decrypt(encrypted_path: Path) -> Path:
     cmd = [
         "gpg",
         "--output",
-        decrypted_path,
+        str(decrypted_path),
         "--decrypt",
-        encrypted_path,
+        str(encrypted_path),
     ]
     proc = subprocess.run(cmd, capture_output=True)
     stdout = proc.stdout.decode("utf-8")
     stderr = proc.stderr.decode("utf-8")
 
-    something_went_wrong = stdout or stderr
+    something_went_wrong = proc.returncode != 0
 
     if something_went_wrong:
         # TODO: handle this with the corresponding exceptions - if key missing, etc.
         print(f"{stdout=}")
         print(f"{stderr=}")
+        raise GPGError(stderr)
 
     logger.debug(f"Encryption output: {decrypted_path}")
     return decrypted_path

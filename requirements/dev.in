@@ -6,3 +6,6 @@ isort
 mypy
 pip-tools
 pytest
+hatchling
+docker
+python-gnupg

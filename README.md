@@ -14,45 +14,44 @@ python -m build --wheel
 
 You should be able to run this outside a container.
 
-### Semi maManually test PKGBUILD within container
+## Publish `PKGBUILD`
 
-1. Remove `PKGBUILD_files/TO_DELETE` directory if exists:
+1. Clone AUR repo locally - this only needs to be done the first time:
 
-  ```shell
-  rm -rf PKGBUILD_files/TO_DELETE
+  ```bash
+  # in ~/projects
+  mkdir aur
+  cd aur
+  git clone ssh://aur@aur.archlinux.org/direnv-backup.git
+  cd direnv-backup
   ```
 
-2. Start a clean container and shell into it:
+2. In the current repo, amend `PKGBUILD` as needed:
 
-  ```shell
-  docker-compose down
-  make rebuild_container_image shell_in_container
+  ```bash
+  # TODO: script to bump version
+  bash scripts/generate_pkgbuild.sh
   ```
 
-3. Create the pacman package:
+3. Test `PKGBUILD` in container:
 
-  ```shell
-  bash build.sh
+  ```bash
+  docker-compose run --rm direnv-backup-only-pkgbuild \
+    bash test_pkgbuild_file.sh
   ```
 
-  You will need to type the password of the user (see `Dockerfile`) and press `Y` to temporarily install dependencies for the buld.
+4. Push `PKGBUILD` to local AUR repo:
 
-4. Check that the `direnvbackup` command is not available.
-
-  ```shell
-  $ direnvbackup --help
-  Unknown command: direnvbackup
+  ```bash
+  python scripts/push_pkgbuild_to_local_aur_repo.py
   ```
 
-5. Install the package
+5. Commit in local AUR repo and push to remote AUR:
 
-  ```shell
-  bash install.sh
-  ```
+  ```bash
+  $ pwd
+  ~projects/aur/direnv-backup
 
-6. Check that the `direnvbackup` command is available.
-
-  ```shell
-  direnvbackup --help
-  # no errors
+  $ git commit -m <Message here>   # "Bump version to 1.2.3"
+  $ git push
   ```

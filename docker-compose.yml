@@ -1,20 +1,38 @@
 version: "3.8"
 
 services:
-  direnv-guardian:
+  direnv-backup-with-dev-deps:
     build:
       context: .
       dockerfile: Dockerfile
-    image: direnv-guardian
-    container_name: direnv-guardian
+      target: test
+    image: direnv-backup-with-dev-deps
+    container_name: direnv-backup-with-dev-deps
     command: fish
 
-    # I want to be me!
-    # user: ${CURRENT_UID}
+    volumes:
+      # mount source files
+      - "./direnv_backup:/app/direnv_backup"
+      - "./tests:/app/tests"
+      - "./pyproject.toml:/app/pyproject.toml"
+      - "./setup.cfg:/app/setup.cfg"
+      - "./LICENSE:/app/LICENSE"
+      - "./README.md:/app/README.md"
+      #
+      # mount PKGBUILD
+      - "./PKGBUILD_files:/pacman_build_dir"
+
+    environment:
+      - PYTHONBREAKPOINT=ipdb.set_trace
+
+  direnv-backup-only-pkgbuild:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: base
+    image: direnv-backup-only-pkgbuild
+    container_name: direnv-backup-only-pkgbuild
 
     volumes:
-      # # mount everything
-      # - ".:/app"
-      #
-      # mount only PKGBUILD
-      - "./PKGBUILD_files:/app"
+      - "./scripts/in_container:/app"
+      - "./PKGBUILD:/pacman_build_dir"

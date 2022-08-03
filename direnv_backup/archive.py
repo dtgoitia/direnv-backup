@@ -40,9 +40,9 @@ def extract(path: Path, extract_to_dir: Path) -> None:
         "--extract",
         "--verbose",
         "-f",
-        path,
+        str(path),
         "--directory",
-        extract_to_dir,
+        str(extract_to_dir),
     ]
     proc = subprocess.run(cmd, capture_output=True)
     stdout = proc.stdout.decode("utf-8")

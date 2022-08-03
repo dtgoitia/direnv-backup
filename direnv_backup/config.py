@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from dataclasses import dataclass
+from dataclasses import Field, dataclass
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -15,7 +15,9 @@ Email = str
 class Config:
     root_dir: Path  # top of the filesystem where to start scanning for direnv files
     backup_dir: Path  # folder where the backup will be stored
-    exclude: list[str] = list  # patterns to ignore while scanning direnv files
+    #
+    # patterns to ignore while scanning direnv files
+    exclude: set[str] = set  # type: ignore
     #
     # If true, encrypt the tar file
     # this way you can start using it with Dropbox without encryption if you want to
@@ -29,24 +31,31 @@ class Config:
     def tmp_dir(self) -> Path:
         return self.backup_dir / ".tmp"
 
+    @classmethod
+    @property
+    def expected_json(self) -> str:
+        fields = Config.__dataclass_fields__
+
+        formatted_attributes: list[str] = []
+
+        for field_name in sorted(fields.keys()):
+            field: Field = fields[field_name]
+
+            if str(field.type).startswith("<class "):
+                field_type = field.type.__name__
+            else:
+                field_type = str(field.type)
+            field_type = field_type.replace("set", "list")
+
+            attribute = f'  "{field_name}": <{field_type}>,'
+
+            formatted_attributes.append(attribute)
+
+        return "\n".join(["{", *formatted_attributes, "}"])
+
 
 class ConfigError(Exception):
     ...
-
-
-def load_config(cli_path: str) -> Config:
-    try:
-        return load_config_from_envvar(envvar_name=config_envvar_name)
-    except ConfigError as env_error:
-        logger.debug(env_error)
-
-    if not cli_path:
-        raise ConfigError(f"Config not found")
-
-    try:
-        return try_loading_config_from_cli()
-    except ConfigError as env_error:
-        logger.debug(env_error)
 
 
 def load_config_from_envvar(envvar_name: str) -> Config:
@@ -65,6 +74,23 @@ def load_config_from_envvar(envvar_name: str) -> Config:
 
 def try_loading_config_from_cli():
     raise NotImplementedError()
+
+
+def load_config(cli_path: str) -> Config | None:
+    try:
+        return load_config_from_envvar(envvar_name=config_envvar_name)
+    except ConfigError as env_error:
+        logger.debug(env_error)
+
+    if not cli_path:
+        raise ConfigError("Config not found")
+
+    try:
+        return try_loading_config_from_cli()
+    except ConfigError as env_error:
+        logger.debug(env_error)
+
+    return None
 
 
 def validate_config(config: Config) -> None:
@@ -96,15 +122,23 @@ def read_config(path: Path) -> Config:
     try:
         config_data = json.loads(interpolated_config)
     except json.JSONDecodeError:
-        raise ConfigError(f"Provided config file contains invalid JSON")
+        raise ConfigError("Provided config file contains invalid JSON")
 
-    config = Config(
-        root_dir=Path(config_data["root_dir"]),
-        exclude=set(config_data["exclude"]),
-        backup_dir=Path(config_data["backup_dir"]),
-        encrypt_backup=config_data.get("encrypt_backup"),
-        encryption_recipient=config_data.get("encryption_recipient"),
-    )
+    try:
+        config = Config(
+            root_dir=Path(config_data["root_dir"]),
+            exclude=set(config_data["exclude"]),
+            backup_dir=Path(config_data["backup_dir"]),
+            encrypt_backup=config_data.get("encrypt_backup"),
+            encryption_recipient=config_data.get("encryption_recipient"),
+        )
+    except KeyError as missing_field:
+        raise ConfigError(
+            f"Provided config is missing the {missing_field} field.\n"
+            "The config should look like this:\n"
+            f"{Config.expected_json}\n"
+            "\n"
+        )
 
     validate_config(config=config)
 

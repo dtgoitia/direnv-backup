@@ -1,0 +1,4 @@
+*.whl
+*.tar
+*.gpg
+*.pkg.tar.zst

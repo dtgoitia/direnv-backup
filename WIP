@@ -1,8 +1,25 @@
-- [x] Build wheel outside container using `python -m build --wheel` --> got wheel!
-- [x] In container, install wheel with pip --> worked
-- [ ] Find out how to invoke installed wheel
-  - Iterate: build outside container, install with `pip` inside container
-  - Added `[project.scripts]` section and built without errors
+- Remove unnecessary test and scripts, and keep:
+  - in a container without dev-deps
+    - [x] test PKGBUILD produces pacman package correctly
+    - [x] test PKGBUILD installs pacman package correctly (aka, command is found after installation, but do not test the command)
+  - in a container with dev-deps:
+    - [x] test wheel is built correctly
+    - [x] after installing wheel, the expected CLI command is available
+    - [x] test the Python logic invoked by the CLI, but without building or installing the wheel (usual unit/integration tests at Python level)
+  - delete BASH scripts that are not needed anymore
+
+- [ ] Add CI in GitHub actions for development branches and for master - think if they have to be different flows or they are the same
+- [x] Update command names in pyproject.toml
+- [x] Add "restore" command name in pyproject.toml
+- [x] Add script to automatically generate new pkgbuild from template.
+- [x] Add script to push pkgbuild to local AUR repo.
+
+- [ ] Add logic to install systemd unit to regularly run the backup command
+- [ ] Document how to use the systemd unit
+- [ ] Document how to use the restore CLI
+- [ ] Document how to use the backup CLI
+- [ ] Document required config file
+- [ ] Add git commit hooks for isort, flake8, black, mypy, etc.
 
 - interpolate envvars in config paths
   - pro: not necessary to hardcode a value in the config

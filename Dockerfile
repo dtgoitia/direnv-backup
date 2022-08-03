@@ -1,15 +1,19 @@
-FROM archlinux:base-devel-20220724.0.70393
+FROM archlinux:base-devel-20220724.0.70393 as base
 
-RUN pacman -Syu gnupg fish --noconfirm
-RUN pacman -Syu python python-pip --noconfirm
+RUN pacman -Syu --noconfirm \
+  python \
+  python-pip \
+  gnupg \
+  fish
 
+# TODO: this should perhaps go above the package installations
 ENV USER=rootless
+ENV USERPASSWORD=123
 
 RUN useradd $USER
-# RUN echo "$USER ALL=(ALL:ALL) ALL" >> /etc/sudoers
 RUN echo "$USER ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 #              ^ this is a tab
-RUN echo $USER:123 | chpasswd
+RUN echo $USER:$USERPASSWORD | chpasswd
 RUN mkdir -p /home/$USER
 RUN chown $USER: /home/$USER
 ENV PATH="${PATH}:/home/${USER}/.local/bin"
@@ -19,6 +23,8 @@ ENV PYTHONUNBUFFERED 1
 
 WORKDIR /app
 
-# Dev dependencies are not required, because this script must have zero dependencies
-# COPY ./requirements /requirements
-# RUN pip install -r /requirements/dev.txt
+FROM base as test
+COPY ./requirements/dev.txt .
+RUN pip install --upgrade pip \
+  && pip install -r dev.txt \
+  && rm dev.txt

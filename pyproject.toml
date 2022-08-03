@@ -23,5 +23,6 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project.scripts]
-direnvbackup = "direnv_backup.cli.backup:main"
+direnv-backup = "direnv_backup.cli.backup:main"
+direnv-restore = "direnv_backup.cli.restore:main"
 

@@ -40,10 +40,21 @@ format:
 	black .
 
 test:
-	pytest . -vv -s
+	docker-compose run --rm direnv-backup-with-dev-deps \
+		pytest -vv -s .
+
+test_pkgbuild:
+	docker-compose run --rm direnv-backup-only-pkgbuild bash test_pkgbuild_file.sh
 
 shell_in_container:
-	docker-compose run --rm direnv-guardian fish
+	docker-compose run --rm direnv-backup-with-dev-deps \
+		fish
 
-rebuild_container_image:
-	docker-compose build direnv-guardian
+rebuild_container_images:
+	docker-compose build \
+		direnv-backup-with-dev-deps \
+		direnv-backup-only-pkgbuild
+
+generate_and_push_pkgbuild_to_local_aur_repo:
+	bash scripts/generate_pkgbuild.sh
+	python scripts/push_pkgbuild_to_local_aur_repo.py

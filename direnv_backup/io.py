@@ -1,4 +1,5 @@
 import json
+import shutil
 from pathlib import Path
 
 
@@ -11,3 +12,8 @@ def write_json(path: Path, data: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w") as f:
         json.dump(data, f, indent=2)
+
+
+def copy_file(*, src: Path, dst: Path) -> None:
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy(src=src, dst=dst)
