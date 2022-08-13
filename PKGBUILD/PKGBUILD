@@ -13,7 +13,6 @@ url="https://github.com/dtgoitia/${_name}"
 source=("${_name}-${pkgver}::git+https://github.com/dtgoitia/${_name}.git")
 # source=("direnv_backup_sources::git+https://github.com/dtgoitia/direnv-backup.git?signed#tag=${pkgver}")
 
-
 provides=($_name)
 conflicts=($_name "${_name}-git" "${_name}-bin")
 license=("GLP3")
@@ -21,24 +20,18 @@ depends=("python")
 makedepends=("git" "python-build" "python-installer" "python-wheel")
 
 build () {
-    pwd
     cd "${srcdir}/${_name}-${pkgver}"
-    pwd
-
     python -m build --wheel --outdir $srcdir
 }
 
 package() {
-    pwd
-    cd "${srcdir}/${_name}-${pkgver}"
-    pwd
-    # echo "Files:"
-    # find .
-    # echo ""
-    # echo "Variables:"
-    # printenv
-    # echo ""
+    wheel_file="$(find . -type f -name '*.whl')"
+    
+    if [[ ! -f "${wheel_file}" ]]; then
+        echo "Could not find the wheel package" 1>&2
+        exit 1
+    fi
 
-    python -m installer --destdir="$pkgdir" dist/*.whl
+    python -m installer --destdir="$pkgdir" "${wheel_file}"
 }
 sha256sums=('SKIP')

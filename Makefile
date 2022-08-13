@@ -51,6 +51,8 @@ shell_in_container:
 		fish
 
 rebuild_container_images:
+	docker-compose down
+	# docker rmi direnv-backup-with-dev-deps direnv-backup-only-pkgbuild archlinux
 	docker-compose build \
 		direnv-backup-with-dev-deps \
 		direnv-backup-only-pkgbuild
