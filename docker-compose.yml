@@ -14,6 +14,7 @@ services:
       # mount source files
       - "./direnv_backup:/app/direnv_backup"
       - "./tests:/app/tests"
+      - "./scripts:/app/scripts"
       - "./pyproject.toml:/app/pyproject.toml"
       - "./setup.cfg:/app/setup.cfg"
       - "./LICENSE:/app/LICENSE"
