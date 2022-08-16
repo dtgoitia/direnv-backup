@@ -1,4 +1,5 @@
 import dataclasses
+import shutil
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -105,6 +106,56 @@ def test_backup_and_restore_without_encryption(config: Config) -> None:
         restore_backup(config=config)
 
         # Assert
+        assert_all_envrc_files_are_in_place(root_dir=config.root_dir)
+
+
+@pytest.mark.skipif(not inside_container(), reason="must run in container")
+def test_backup_and_restore_multiple_backups(config: Config) -> None:
+    # ----------------------------------------------------------------------------------
+    #  Backup
+    # ----------------------------------------------------------------------------------
+
+    assert config.encryption_recipient
+    gpg_key = GPGKey(name="foo", email=config.encryption_recipient)
+
+    with AutoCleaningEnvironment(
+        root_dir=config.root_dir,
+        set_envrcs=True,
+        gpg_key=gpg_key,
+        cleanup_gpg_keys_on_exit=False,
+    ):
+        # Act
+        backup(config=config)
+
+        # Assert
+        assert len(list(config.backup_dir.glob("*.tar"))) == 0
+        assert len(list(config.backup_dir.glob("*.gpg"))) == 1
+
+        # duplicate backup
+        first_backup = next(config.backup_dir.glob("*.gpg"))
+        second_backup = first_backup.with_stem("20000101-000000")
+        second_backup.touch()  # fake backup
+
+    # ----------------------------------------------------------------------------------
+    #  Restore
+    # ----------------------------------------------------------------------------------
+
+    # Setup: there are multiple encrypted files in the backup directory
+    assert config.backup_dir.exists()
+    files_in_backup_dir = [p for p in config.backup_dir.rglob("*") if p.is_file()]
+    assert len(files_in_backup_dir) == 2
+    assert set(path.suffix for path in files_in_backup_dir) == {".gpg"}
+
+    with AutoCleaningEnvironment(
+        root_dir=config.root_dir,
+        set_envrcs=False,
+        gpg_key=gpg_key,
+    ):
+        # Act
+        restore_backup(config=config)
+        # If instead of the latest backup, the fake backup is picked, then the restore
+        # command will fail
+
         assert_all_envrc_files_are_in_place(root_dir=config.root_dir)
 
 

@@ -47,6 +47,24 @@ def restore_file(backup: Path, config: Config) -> None:
     copy_file(src=backup, dst=final_path)
 
 
+def find_latest_backup(dir: Path, encrypted: bool) -> Path:
+    if encrypted:
+        extension = ".gpg"
+    else:
+        extension = ".tar"
+
+    backups = dir.glob(f"*{extension}")
+
+    # backups include a timestamp at the begining of the file
+    sorted_backups = sorted(backups)
+    logger.info(f"{len(sorted_backups)} backups found")
+
+    most_recent_backup = sorted_backups.pop()
+    logger.info(f"Most recent backup: {most_recent_backup.absolute()}")
+
+    return most_recent_backup
+
+
 def restore_backup(config: Config) -> None:
     """
     The restore backup will restore the files taking the config.root_dir as the root
@@ -62,11 +80,13 @@ def restore_backup(config: Config) -> None:
     # TODO assert keys exists for selected recipient, if not raise meaningful error
 
     if config.encrypt_backup:
-        encrypted_path = next(config.backup_dir.glob("*.gpg"))
+        encrypted_path = find_latest_backup(dir=config.backup_dir, encrypted=True)
+        # encrypted_path = next(config.backup_dir.glob("*.gpg"))
         archive_path = decrypt(encrypted_path=encrypted_path)
         assert archive_path.suffixes == [".tar"]
     else:
-        archive_path = next(config.backup_dir.glob("*.tar"))
+        archive_path = find_latest_backup(dir=config.backup_dir, encrypted=False)
+        # archive_path = next(config.backup_dir.glob("*.tar"))
 
     # To make clean-up easier, extract the backup into a temporary directory
     #
