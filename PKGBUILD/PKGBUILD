@@ -9,9 +9,7 @@ pkgrel=1
 pkgdesc="Tool to backup/restore direnv files with optional encryption"
 arch=("any")
 url="https://github.com/dtgoitia/${_name}"
-# source=("https://github.com/dtgoitia/${_name}.git")
 source=("${_name}-${pkgver}::git+https://github.com/dtgoitia/${_name}.git")
-# source=("direnv_backup_sources::git+https://github.com/dtgoitia/direnv-backup.git?signed#tag=${pkgver}")
 
 provides=($_name)
 conflicts=($_name "${_name}-git" "${_name}-bin")
