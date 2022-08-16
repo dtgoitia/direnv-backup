@@ -26,20 +26,19 @@ def parse_arguments(args: list[str] | None = None) -> argparse.Namespace:
 def main(args: list[str] | None = None) -> str | None:
     arguments = parse_arguments(args=args)
 
-    set_up_logging_config(debug_mode_on=arguments.verbose)
-
     if not arguments.config:
         return "Please specify a config (see --help)"
 
     config_path = Path(arguments.config)
     if not config_path.exists():
         return f"Provided path for the config file does not exit: {config_path}"
-    logger.debug(f"Provided config {str(config_path.absolute())!r} file exists")
 
     try:
         config = read_config(path=config_path)
     except ConfigError as error:
         return str(error)
+
+    set_up_logging_config(debug_mode_on=arguments.verbose)
 
     logger.debug(f"Config loaded: {config}")
 
