@@ -1,0 +1,9 @@
+[Unit]
+Description=Run direnv-backup with user config.
+
+[Service]
+Type=simple
+ExecStart=direnv-backup --config=%h/.config/direnv-backup/config.json
+
+[Install]
+WantedBy=default.target

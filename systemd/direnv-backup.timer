@@ -1,0 +1,17 @@
+[Unit]
+Description=Schedule a backup of direnv files every hour
+RefuseManualStart=no  # Allow manual starts
+RefuseManualStop=no   # Allow manual stops
+
+[Timer]
+# Do not execute job if it missed a run due to machine being off
+Persistent=false
+# Run 3600 seconds after boot for the first time
+OnBootSec=3600
+# Run every 1 hour thereafter
+OnUnitActiveSec=3600
+# File describing job to execute
+Unit=direnv-backup.service
+
+[Install]
+WantedBy=timers.target
