@@ -4,54 +4,106 @@ Tool to backup/restore direnv files.
 
 Purely written in Python.
 
-## Development
+## Rationale
 
-### Build a wheel
+If you use [direnv][1] (*), you have probably built up a few dozens of carefully crafted `.envrc` files over time that now quietly live somewhere scattered across your projects directory making your developer experience much nicer almost for free.
 
-```shell
-python -m build --wheel
+Wouldn't it be great if you could back up all those precious files?
+
+[direnv-backup][2] is a simple CLI utility to backup/restore your direnv files. It is designed to be [config driven](#configuration). Just drop your dotfiles, install direnv-backup and you are ready to go.
+
+Optionally, you can encrypt your backups using [GPG][3]. I strongly suggest you to enable encryption.
+
+\*: if you don't use it yet, you should definitely try it.
+
+## Installation
+
+* Install with your AUR package manager:
+
+  ```bas
+  $ aurman -S direnv-backup
+  ```
+
+* Create mandatory config file, see [how to](#configuration).
+
+* Enable automatic backups:
+
+  ```bash
+  $ systemd --user enable direnv-backup.timer
+  ```
+
+## Configuration
+
+`direnv-backup` is driven by configuration. Create a file at `~/.config/direnv-backup/config.json` and add the following:
+
+```json
+{
+  "root_dir": "/home/janedoe/projects",
+  "exclude": [
+    "__pycache_ _",
+    ".git",
+    ".venv",
+    "node_modules"
+  ],
+  "backup_dir": "/home/janedoe/my-direnv-backups",
+  "encrypt_backup": true,
+  "encryption_recipient": "john@doe.com"
+}
 ```
 
-You should be able to run this outside a container.
+where:
 
-## Publish `PKGBUILD`
+  * `root_dir` (string): path where the backup command looks for direnv files to back them up, and the reference the restore command uses to know where to put the direnv files back.
 
-1. Clone AUR repo locally - this only needs to be done the first time:
+  * `exclude` (string list): list of directory names to skip during the `root_dir` traversal. Suggestion: populate this list with big directories that do not contain direnv files to considerably **reduce the execution time**.
 
-  ```bash
-  # in ~/projects
-  mkdir aur
-  cd aur
-  git clone ssh://aur@aur.archlinux.org/direnv-backup.git
-  cd direnv-backup
+  * `backup_dir` (string): path where the backups will be stored.
+
+  * `encrypt_backup` (boolean, _optional_): if `true` the backups will be encrypted. Requires `encryption_recipient`.
+
+  * `encryption_recipient` (string, _optional_): email set in the GPG key pair that will be used to encrypt (on back up) and decrypt (on restore) the backups.
+
+### Custom backup frequency
+
+To tune how frequently automatic backups are created, copy the default timer unit:
+
+```bash
+cp \
+  /usr/lib/systemd/user/direnv-backup.timer \
+  ~/.config/systemd/user/direnv-backup.timer
+```
+
+and, in the new file, set `OnUnitActiveSec` to the amount of seconds you want between each backup:
+
+```diff
+- OnUnitActiveSec=3600
++ OnUnitActiveSec=1234567
+```
+
+You might need to ask systemd to reload units after this change.
+
+## Commands
+
+**IMPORTANT**: a working [configuration](#configuration) must be in place.
+
+* Create a new backup:
+
+  ```shell
+  direnv-backup --config=/path/to/config.json
   ```
 
-2. In the current repo, amend `PKGBUILD` as needed:
+* Restore the last backup:
 
-  ```bash
-  # TODO: script to bump version
-  bash scripts/generate_pkgbuild.sh
+  ```shell
+  direnv-restore --config=/path/to/config.json
   ```
 
-3. Test `PKGBUILD` in container:
+## Development
 
-  ```bash
-  docker-compose run --rm direnv-backup-only-pkgbuild \
-    bash test_pkgbuild_file.sh
-  ```
+See [development docs](./docs/development.md).
 
-4. Push `PKGBUILD` to local AUR repo:
+<!-- External references -->
 
-  ```bash
-  python scripts/push_pkgbuild_to_local_aur_repo.py
-  ```
-
-5. Commit in local AUR repo and push to remote AUR:
-
-  ```bash
-  $ pwd
-  ~projects/aur/direnv-backup
-
-  $ git commit -m <Message here>   # "Bump version to 1.2.3"
-  $ git push
-  ```
+[1]: https://direnv.net/ "direnv official site"
+[2]: https://aur.archlinux.org/packages/direnv-backup "AUR direnv-backup"
+[3]: https://www.gnupg.org/ "GnuPG official site"
