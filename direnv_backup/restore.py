@@ -59,7 +59,7 @@ def restore_backup(config: Config) -> None:
     GPG knows which private key to use to decrypt the file because its specified in the
     encrypted file itself: https://security.stackexchange.com/a/183202
     """
-    # TODO assert image exists for selected recipient, if not raise meaningful error
+    # TODO assert keys exists for selected recipient, if not raise meaningful error
 
     if config.encrypt_backup:
         encrypted_path = next(config.backup_dir.glob("*.gpg"))
@@ -67,9 +67,6 @@ def restore_backup(config: Config) -> None:
         assert archive_path.suffixes == [".tar"]
     else:
         archive_path = next(config.backup_dir.glob("*.tar"))
-
-    if not encrypted_path.exists():
-        raise NotImplementedError("TODO: add meaningful error")
 
     # To make clean-up easier, extract the backup into a temporary directory
     #

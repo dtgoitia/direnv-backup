@@ -30,8 +30,7 @@ class AutoCleaningEnvironment:
     ):
         self.root_dir = root_dir
         self.create_envrc_files = set_envrcs
-        if gpg_key:
-            self.gpg_key = gpg_key
+        self.gpg_key = gpg_key
         self.cleanup_gpg_keys_on_exit = cleanup_gpg_keys_on_exit
 
     def __enter__(self):

@@ -15,7 +15,7 @@ from tests.helpers.gpg import GPGKey
 
 
 @pytest.mark.skipif(not inside_container(), reason="must run in container")
-def test_backup_and_restore(config: Config) -> None:
+def test_backup_and_restore_with_encryption(config: Config) -> None:
     # ----------------------------------------------------------------------------------
     #  Backup
     # ----------------------------------------------------------------------------------
@@ -50,6 +50,56 @@ def test_backup_and_restore(config: Config) -> None:
         root_dir=config.root_dir,
         set_envrcs=False,
         gpg_key=gpg_key,
+    ):
+        # Act
+        restore_backup(config=config)
+
+        # Assert
+        assert_all_envrc_files_are_in_place(root_dir=config.root_dir)
+
+
+@pytest.mark.skipif(not inside_container(), reason="must run in container")
+def test_backup_and_restore_without_encryption(config: Config) -> None:
+    # ----------------------------------------------------------------------------------
+    #  Backup
+    # ----------------------------------------------------------------------------------
+
+    config = Config(
+        root_dir=config.root_dir,
+        exclude=config.exclude,
+        backup_dir=config.backup_dir,
+        encrypt_backup=False,
+        encryption_recipient=None,
+    )
+
+    with AutoCleaningEnvironment(
+        root_dir=config.root_dir,
+        set_envrcs=True,
+        gpg_key=None,
+        cleanup_gpg_keys_on_exit=False,
+    ):
+        # Act
+        backup(config=config)
+
+        # Assert
+        assert len(list(config.backup_dir.glob("*.tar"))) == 1
+        assert len(list(config.backup_dir.glob("*.gpg"))) == 0
+
+    # ----------------------------------------------------------------------------------
+    #  Restore
+    # ----------------------------------------------------------------------------------
+
+    # Setup: there must only be an encrypted file in the backup directory
+    assert config.backup_dir.exists()
+    files_in_backup_dir = [p for p in config.backup_dir.rglob("*") if p.is_file()]
+    assert len(files_in_backup_dir) == 1
+    assert files_in_backup_dir[0].suffixes == [".tar"]
+
+    with AutoCleaningEnvironment(
+        root_dir=config.root_dir,
+        set_envrcs=False,
+        gpg_key=None,
+        cleanup_gpg_keys_on_exit=False,
     ):
         # Act
         restore_backup(config=config)
