@@ -1,9 +1,10 @@
 import difflib
 
 
-def diff_texts(a: str, b: str, minimal=False) -> list[str]:
+# TODO: move this to a non-test folder!
+def diff_texts(a: str, b: str, minimal: bool = False) -> list[str]:
     if minimal is False:
-        return "\n".join(difflib.Differ().compare(a.splitlines(), b.splitlines()))
+        return list(difflib.Differ().compare(a.splitlines(), b.splitlines()))
 
     result: list[str] = []
     for line in difflib.unified_diff(a.splitlines(), b.splitlines()):

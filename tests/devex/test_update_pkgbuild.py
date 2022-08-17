@@ -1,45 +1,47 @@
 import os
 from pathlib import Path
 from textwrap import dedent, indent
+from unittest import mock
 
 import pytest
 
-from scripts.update_pkgbuild import (
+from devex.cli.update_pkgbuild import update_pkgbuild_cmd
+from devex.exceptions import MissingEnvironmentVariable
+from devex.pkgbuild import (
     LOCAL_AUR_REPO_DIR_ENVVAR_NAME,
-    MissingEnvironmentVariable,
     SemVer,
-    find_pkgbuild_path,
-    update_pkgbuild_cmd,
+    find_aur_pkgbuild_path,
 )
 from tests.helpers.diff import UnexpectedDiff, diff_texts, join_lines
+from tests.helpers.environment import MockDevelopmentEnvironment
 
 
-def test_find_pkgbuild_path(fake_environment, tmp_path):
+def test_find_aur_pkgbuild_path(fake_environment, tmp_path):
     dir: Path = tmp_path / "dir"
     dir.mkdir(parents=True, exist_ok=True)
     os.environ[LOCAL_AUR_REPO_DIR_ENVVAR_NAME] = str(dir.absolute())
 
-    result = find_pkgbuild_path()
+    result = find_aur_pkgbuild_path()
 
     assert result == dir / "PKGBUILD"
 
 
-def test_find_pkgbuild_path_if_env_var_mising(fake_environment):
+def test_find_aur_pkgbuild_path_if_env_var_mising(fake_environment):
     assert LOCAL_AUR_REPO_DIR_ENVVAR_NAME not in os.environ
 
     with pytest.raises(MissingEnvironmentVariable) as e:
-        find_pkgbuild_path()
+        find_aur_pkgbuild_path()
 
     exc = e.value
 
     assert exc.args == ("Please set LOCAL_AUR_REPO_DIR",)
 
 
-def test_find_pkgbuild_path_if_env_var_path_does_not_exist(fake_environment):
+def test_find_aur_pkgbuild_path_if_env_var_path_does_not_exist(fake_environment):
     os.environ[LOCAL_AUR_REPO_DIR_ENVVAR_NAME] = "non_existing_path"
 
     with pytest.raises(ValueError) as e:
-        find_pkgbuild_path()
+        find_aur_pkgbuild_path()
 
     exc = e.value
 
@@ -49,13 +51,13 @@ def test_find_pkgbuild_path_if_env_var_path_does_not_exist(fake_environment):
     )
 
 
-def test_find_pkgbuild_path_if_env_var_path_is_a_file(fake_environment, tmp_path):
+def test_find_aur_pkgbuild_path_if_env_var_path_is_a_file(fake_environment, tmp_path):
     path = tmp_path / "file"
     path.touch()
     os.environ[LOCAL_AUR_REPO_DIR_ENVVAR_NAME] = str(path.absolute())
 
     with pytest.raises(ValueError) as e:
-        find_pkgbuild_path()
+        find_aur_pkgbuild_path()
 
     exc = e.value
 
@@ -65,15 +67,17 @@ def test_find_pkgbuild_path_if_env_var_path_is_a_file(fake_environment, tmp_path
     )
 
 
+@mock.patch("devex.pkgbuild.sync_git_tag")
 def test_error_if_invalid_bump_type(fake_environment, tmp_path: Path):
-    pkgbuild_path = tmp_path / "PKGBUILD"
-    pkgbuild_path.touch()
-    os.environ[LOCAL_AUR_REPO_DIR_ENVVAR_NAME] = str(pkgbuild_path.parent.absolute())
-
-    exit_value = update_pkgbuild_cmd(args=["--bump", "foo"])
-    assert exit_value == (
-        "'foo' is not a valid bump type. Supported values: major, minor, patch"
-    )
+    with MockDevelopmentEnvironment(
+        test_dir=tmp_path,
+        pkgbuild="foo",
+        pyproject="foo",
+    ):
+        exit_value = update_pkgbuild_cmd(args=["--bump", "foo"])
+        assert exit_value == (
+            "'foo' is not a valid bump type. Supported values: major, minor, patch"
+        )
 
 
 def test_semver_to_str():
@@ -81,11 +85,9 @@ def test_semver_to_str():
     assert str(version) == "1.2.3"
 
 
+@mock.patch("devex.pkgbuild.sync_git_tag")
 def test_bump_patch(fake_environment, tmp_path: Path):
-    pkgbuild_path = tmp_path / "PKGBUILD"
-    os.environ[LOCAL_AUR_REPO_DIR_ENVVAR_NAME] = str(pkgbuild_path.parent.absolute())
-
-    before = dedent(
+    pkgbuild = dedent(
         """
         _name=my-super-package
         pkgname="${_name}-git"
@@ -95,6 +97,13 @@ def test_bump_patch(fake_environment, tmp_path: Path):
         source=("${_name}-${pkgver}::git+https://github.com/dtgoitia/${_name}.git")
         """
     ).strip()
+
+    pyproject = dedent(
+        """
+        version = "0.0.1"
+        description = "Tool to backup/restore direnv files with optional encryption"
+        """
+    )
 
     expected_diff = [
         "-pkgver=0.0.1",
@@ -103,16 +112,19 @@ def test_bump_patch(fake_environment, tmp_path: Path):
         "+pkgrel=1",
     ]
 
-    pkgbuild_path.write_text(before)
+    with MockDevelopmentEnvironment(
+        test_dir=tmp_path,
+        pkgbuild=pkgbuild,
+        pyproject=pyproject,
+    ) as mock_env:
+        assert update_pkgbuild_cmd(args=["--bump", "patch"]) is None
 
-    # Act
-    assert update_pkgbuild_cmd(args=["--bump", "patch"]) is None
+        updated_pkgbuild = mock_env.pkgbuild
 
     # Assert
-    after = pkgbuild_path.read_text()
-    diff = diff_texts(a=before, b=after, minimal=True)
+    diff = diff_texts(a=pkgbuild, b=updated_pkgbuild, minimal=True)
     if sorted(diff) != sorted(expected_diff):
-        diff_with_context = diff_texts(a=before, b=after, minimal=False)
+        diff_with_context = diff_texts(a=pkgbuild, b=updated_pkgbuild, minimal=False)
         raise UnexpectedDiff(
             (
                 "\n"
@@ -122,16 +134,14 @@ def test_bump_patch(fake_environment, tmp_path: Path):
                 "\n"
                 "but got this instead:\n"
                 "\n"
-                f'{indent(diff_with_context, prefix="  ")}\n'
+                f'{indent(join_lines(diff_with_context), prefix="  ")}\n'
             )
         )
 
 
+@mock.patch("devex.pkgbuild.sync_git_tag")
 def test_bump_minor(fake_environment, tmp_path: Path):
-    pkgbuild_path = tmp_path / "PKGBUILD"
-    os.environ[LOCAL_AUR_REPO_DIR_ENVVAR_NAME] = str(pkgbuild_path.parent.absolute())
-
-    before = dedent(
+    pkgbuild = dedent(
         """
         _name=my-super-package
         pkgname="${_name}-git"
@@ -141,6 +151,13 @@ def test_bump_minor(fake_environment, tmp_path: Path):
         source=("${_name}-${pkgver}::git+https://github.com/dtgoitia/${_name}.git")
         """
     ).strip()
+
+    pyproject = dedent(
+        """
+        version = "0.0.1"
+        description = "Tool to backup/restore direnv files with optional encryption"
+        """
+    )
 
     expected_diff = [
         "-pkgver=0.0.1",
@@ -149,16 +166,21 @@ def test_bump_minor(fake_environment, tmp_path: Path):
         "+pkgrel=1",
     ]
 
-    pkgbuild_path.write_text(before)
+    with MockDevelopmentEnvironment(
+        test_dir=tmp_path,
+        pkgbuild=pkgbuild,
+        pyproject=pyproject,
+    ) as mock_env:
+        assert update_pkgbuild_cmd(args=["--bump", "minor"]) is None
 
-    # Act
-    assert update_pkgbuild_cmd(args=["--bump", "minor"]) is None
+        updated_pkgbuild = mock_env.pkgbuild
 
+    os.environ["PYTHONBREAKPOINT"] = "ipdb.set_trace"
     # Assert
-    after = pkgbuild_path.read_text()
-    diff = diff_texts(a=before, b=after, minimal=True)
+    diff = diff_texts(a=pkgbuild, b=updated_pkgbuild, minimal=True)
     if sorted(diff) != sorted(expected_diff):
-        diff_with_context = diff_texts(a=before, b=after, minimal=False)
+        diff_with_context = diff_texts(a=pkgbuild, b=updated_pkgbuild, minimal=False)
+        breakpoint()
         raise UnexpectedDiff(
             (
                 "\n"
@@ -168,16 +190,14 @@ def test_bump_minor(fake_environment, tmp_path: Path):
                 "\n"
                 "but got this instead:\n"
                 "\n"
-                f'{indent(diff_with_context, prefix="  ")}\n'
+                f'{indent(join_lines(diff_with_context), prefix="  ")}\n'
             )
         )
 
 
+@mock.patch("devex.pkgbuild.sync_git_tag")
 def test_bump_major(fake_environment, tmp_path: Path):
-    pkgbuild_path = tmp_path / "PKGBUILD"
-    os.environ[LOCAL_AUR_REPO_DIR_ENVVAR_NAME] = str(pkgbuild_path.parent.absolute())
-
-    before = dedent(
+    pkgbuild = dedent(
         """
         _name=my-super-package
         pkgname="${_name}-git"
@@ -187,6 +207,13 @@ def test_bump_major(fake_environment, tmp_path: Path):
         source=("${_name}-${pkgver}::git+https://github.com/dtgoitia/${_name}.git")
         """
     ).strip()
+
+    pyproject = dedent(
+        """
+        version = "0.0.1"
+        description = "Tool to backup/restore direnv files with optional encryption"
+        """
+    )
 
     expected_diff = [
         "-pkgver=0.0.1",
@@ -195,16 +222,19 @@ def test_bump_major(fake_environment, tmp_path: Path):
         "+pkgrel=1",
     ]
 
-    pkgbuild_path.write_text(before)
+    with MockDevelopmentEnvironment(
+        test_dir=tmp_path,
+        pkgbuild=pkgbuild,
+        pyproject=pyproject,
+    ) as mock_env:
+        assert update_pkgbuild_cmd(args=["--bump", "major"]) is None
 
-    # Act
-    assert update_pkgbuild_cmd(args=["--bump", "major"]) is None
+        updated_pkgbuild = mock_env.pkgbuild
 
     # Assert
-    after = pkgbuild_path.read_text()
-    diff = diff_texts(a=before, b=after, minimal=True)
+    diff = diff_texts(a=pkgbuild, b=updated_pkgbuild, minimal=True)
     if sorted(diff) != sorted(expected_diff):
-        diff_with_context = diff_texts(a=before, b=after, minimal=False)
+        diff_with_context = diff_texts(a=pkgbuild, b=updated_pkgbuild, minimal=False)
         raise UnexpectedDiff(
             (
                 "\n"
@@ -214,16 +244,14 @@ def test_bump_major(fake_environment, tmp_path: Path):
                 "\n"
                 "but got this instead:\n"
                 "\n"
-                f'{indent(diff_with_context, prefix="  ")}\n'
+                f'{indent(join_lines(diff_with_context), prefix="  ")}\n'
             )
         )
 
 
+@pytest.mark.skip(reason="need more thinking: how to test pkgrel update effectively")
 def test_bump_pkgrel(fake_environment, tmp_path: Path):
-    pkgbuild_path = tmp_path / "PKGBUILD"
-    os.environ[LOCAL_AUR_REPO_DIR_ENVVAR_NAME] = str(pkgbuild_path.parent.absolute())
-
-    before = dedent(
+    pkgbuild = dedent(
         """
         _name=my-super-package
         pkgname="${_name}-git"
@@ -234,21 +262,33 @@ def test_bump_pkgrel(fake_environment, tmp_path: Path):
         """
     ).strip()
 
+    pyproject = dedent(
+        """
+        version = "0.0.1"
+        description = "Tool to backup/restore direnv files"
+        """
+    )
+
     expected_diff = [
         "-pkgrel=2",
         "+pkgrel=3",
+        '-pkgdesc="Tool to backup/restore direnv files with optional encryption"',
+        '+pkgdesc="Tool to backup/restore direnv files"',
     ]
 
-    pkgbuild_path.write_text(before)
+    with MockDevelopmentEnvironment(
+        test_dir=tmp_path,
+        pkgbuild=pkgbuild,
+        pyproject=pyproject,
+    ) as mock_env:
+        assert update_pkgbuild_cmd(args=[]) is None
 
-    # Act
-    assert update_pkgbuild_cmd(args=[]) is None
+        updated_pkgbuild = mock_env.pkgbuild
 
     # Assert
-    after = pkgbuild_path.read_text()
-    diff = diff_texts(a=before, b=after, minimal=True)
+    diff = diff_texts(a=pkgbuild, b=updated_pkgbuild, minimal=True)
     if sorted(diff) != sorted(expected_diff):
-        diff_with_context = diff_texts(a=before, b=after, minimal=False)
+        diff_with_context = diff_texts(a=pkgbuild, b=updated_pkgbuild, minimal=False)
         raise UnexpectedDiff(
             (
                 "\n"
@@ -258,6 +298,6 @@ def test_bump_pkgrel(fake_environment, tmp_path: Path):
                 "\n"
                 "but got this instead:\n"
                 "\n"
-                f'{indent(diff_with_context, prefix="  ")}\n'
+                f'{indent(join_lines(diff_with_context), prefix="  ")}\n'
             )
         )

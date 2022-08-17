@@ -4,7 +4,7 @@ version = "0.0.1"
 authors = [
   { name="David Torralba Goitia", email="david.torralba.goitia@gmail.com" },
 ]
-description="Tool to backup/restore direnv files with optional encryption"
+description = "Tool to backup/restore direnv files with optional encryption."
 readme = "README.md"
 license = { file="LICENSE" }
 requires-python = ">=3.10"

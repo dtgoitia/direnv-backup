@@ -11,17 +11,14 @@ services:
     command: fish
 
     volumes:
-      # mount source files
+      # mount only source files
       - "./direnv_backup:/app/direnv_backup"
       - "./tests:/app/tests"
-      - "./scripts:/app/scripts"
+      - "./devex:/app/devex"
       - "./pyproject.toml:/app/pyproject.toml"
       - "./setup.cfg:/app/setup.cfg"
       - "./LICENSE:/app/LICENSE"
       - "./README.md:/app/README.md"
-      #
-      # mount PKGBUILD
-      - "./PKGBUILD_files:/pacman_build_dir"
 
     environment:
       - PYTHONBREAKPOINT=ipdb.set_trace
@@ -36,4 +33,4 @@ services:
 
     volumes:
       - "./scripts/in_container:/app"
-      - "./PKGBUILD:/pacman_build_dir"
+      - "${PWD}/PKGBUILD:/pacman_build_dir/PKGBUILD"

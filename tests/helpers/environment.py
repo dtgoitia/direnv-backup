@@ -1,6 +1,15 @@
+from __future__ import annotations
+
+import os
 import subprocess
 from pathlib import Path
 
+from devex.pkgbuild import (
+    LOCAL_AUR_REPO_DIR_ENVVAR_NAME,
+    RawPkgbuild,
+    find_pkgbuild_path,
+)
+from devex.pyproject import find_pyproject_path
 from tests.helpers.direnv import (
     assert_all_envrc_files_are_in_place,
     create_sample_envrc_files,
@@ -69,3 +78,61 @@ def command_exists(command: str) -> bool:
     assert stdout
     assert not stderr
     return True
+
+
+class MockDevelopmentEnvironment:
+    """
+    Create a disposable development environment with PKGBUILD, pyproject.toml, etc. and
+    mock git
+    """
+
+    def __init__(
+        self,
+        test_dir: Path,
+        pkgbuild: RawPkgbuild = "",
+        pyproject: str = "",
+    ) -> None:
+        self.test_dir = test_dir
+
+        if not pkgbuild:
+            pkgbuild = find_pkgbuild_path().read_text()
+
+        if not pyproject:
+            pyproject = find_pyproject_path().read_text()
+
+        aur_dir = test_dir / "aur"
+        aur_dir.mkdir(parents=True, exist_ok=True)
+        self.aur_pkbuild_path = aur_dir / "PKGBUILD"
+        self.aur_pkbuild_path.write_text(pkgbuild)
+
+        self.repo_dir = test_dir / "repo"
+        self.repo_dir.mkdir(parents=True, exist_ok=True)
+        self.pkbuild_path = self.repo_dir / "PKGBUILD"
+        self.pkbuild_path.write_text(pkgbuild)
+        self.pyproject_path = self.repo_dir / "pyproject.toml"
+        self.pyproject_path.write_text(pyproject)
+
+    def __enter__(self) -> MockDevelopmentEnvironment:
+        self.previous_working_dir = Path.cwd()
+        change_working_directory(to=self.repo_dir)
+
+        self.previous_environment = os.environ
+        os.environ = self.previous_environment.copy()
+        os.environ[LOCAL_AUR_REPO_DIR_ENVVAR_NAME] = str(
+            self.aur_pkbuild_path.parent.absolute()
+        )
+
+        return self
+
+    def __exit__(self, ext_type, exc_value, exc_tb) -> None:
+        change_working_directory(to=self.previous_working_dir)
+
+        os.environ = self.previous_environment
+
+    @property
+    def pkgbuild(self) -> RawPkgbuild:
+        return self.pkbuild_path.read_text()
+
+
+def change_working_directory(to: Path) -> None:
+    os.chdir(path=to)

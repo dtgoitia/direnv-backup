@@ -4,8 +4,8 @@ from unittest import mock
 
 import pytest
 
+from devex.pkgbuild import LOCAL_AUR_REPO_DIR_ENVVAR_NAME
 from direnv_backup.config import Config
-from scripts.update_pkgbuild import LOCAL_AUR_REPO_DIR_ENVVAR_NAME
 from tests.helpers.config import write_config
 
 

@@ -34,7 +34,7 @@ lint:
 	black --check --diff .
 	isort --check --diff .
 	python -m mypy --config-file setup.cfg --pretty ./direnv_backup
-	python -m mypy --config-file setup.cfg --pretty ./scripts
+	python -m mypy --config-file setup.cfg --pretty ./devex
 
 format:
 	isort .
@@ -58,6 +58,8 @@ rebuild_container_images:
 		direnv-backup-with-dev-deps \
 		direnv-backup-only-pkgbuild
 
-generate_and_push_pkgbuild_to_local_aur_repo:
-	bash scripts/generate_pkgbuild.sh
-	python scripts/push_pkgbuild_to_local_aur_repo.py
+assert_pkgbuild_status:
+	python -m devex.cli.assert_pkgbuild_status --verbose
+
+update_pkgbuild:
+	python -m devex.cli.update_pkgbuild --verbose

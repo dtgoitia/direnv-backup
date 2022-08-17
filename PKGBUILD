@@ -1,20 +1,19 @@
 # Maintainer: David Torralba Goitia <david.torralba.goitia@gmail.com>
-
 _name=direnv-backup
 pkgname="${_name}-git"
-# TODO: pick version from pyproject.toml
 pkgver=0.0.1
 pkgrel=1
-# TODO: pick description from pyproject.toml
-pkgdesc="Tool to backup/restore direnv files with optional encryption"
+pkgdesc="Tool to backup/restore direnv files with optional encryption."
 arch=("any")
 url="https://github.com/dtgoitia/${_name}"
-source=("${_name}-${pkgver}::git+https://github.com/dtgoitia/${_name}.git")
+source=("${_name}-${pkgver}::git+${url}.git?tag=${pkgver}")
+sha256sums=('SKIP')
 
 provides=($_name)
 conflicts=($_name "${_name}-git" "${_name}-bin")
 license=("GLP3")
 depends=("python")
+optdepends=("gnupg: backup encryption/decryption support")
 makedepends=("git" "python-build" "python-installer" "python-wheel")
 
 build () {
@@ -32,4 +31,3 @@ package() {
 
     python -m installer --destdir="$pkgdir" "${wheel_file}"
 }
-sha256sums=('SKIP')
