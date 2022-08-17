@@ -5,7 +5,7 @@ from unittest import mock
 import pytest
 
 from direnv_backup.config import Config
-from scripts.bump import LOCAL_AUR_REPO_DIR_ENVVAR_NAME
+from scripts.update_pkgbuild import LOCAL_AUR_REPO_DIR_ENVVAR_NAME
 from tests.helpers.config import write_config
 
 

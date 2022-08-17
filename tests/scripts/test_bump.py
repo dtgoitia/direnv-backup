@@ -4,12 +4,12 @@ from textwrap import dedent, indent
 
 import pytest
 
-from scripts.bump import (
+from scripts.update_pkgbuild import (
     LOCAL_AUR_REPO_DIR_ENVVAR_NAME,
     MissingEnvironmentVariable,
     SemVer,
     find_pkgbuild_path,
-    main,
+    update_pkgbuild_cmd,
 )
 from tests.helpers.diff import UnexpectedDiff, diff_texts, join_lines
 
@@ -65,8 +65,12 @@ def test_find_pkgbuild_path_if_env_var_path_is_a_file(fake_environment, tmp_path
     )
 
 
-def test_error_if_invalid_bump_type():
-    exit_value = main(args=["foo"])
+def test_error_if_invalid_bump_type(fake_environment, tmp_path: Path):
+    pkgbuild_path = tmp_path / "PKGBUILD"
+    pkgbuild_path.touch()
+    os.environ[LOCAL_AUR_REPO_DIR_ENVVAR_NAME] = str(pkgbuild_path.parent.absolute())
+
+    exit_value = update_pkgbuild_cmd(args=["--bump", "foo"])
     assert exit_value == (
         "'foo' is not a valid bump type. Supported values: major, minor, patch"
     )
@@ -86,7 +90,7 @@ def test_bump_patch(fake_environment, tmp_path: Path):
         _name=my-super-package
         pkgname="${_name}-git"
         pkgver=0.0.1
-        pkgrel=1
+        pkgrel=2
         pkgdesc="Tool to backup/restore direnv files with optional encryption"
         source=("${_name}-${pkgver}::git+https://github.com/dtgoitia/${_name}.git")
         """
@@ -95,17 +99,19 @@ def test_bump_patch(fake_environment, tmp_path: Path):
     expected_diff = [
         "-pkgver=0.0.1",
         "+pkgver=0.0.2",
+        "-pkgrel=2",
+        "+pkgrel=1",
     ]
 
     pkgbuild_path.write_text(before)
 
     # Act
-    assert main(args=["patch"]) is None
+    assert update_pkgbuild_cmd(args=["--bump", "patch"]) is None
 
     # Assert
     after = pkgbuild_path.read_text()
     diff = diff_texts(a=before, b=after, minimal=True)
-    if diff != expected_diff:
+    if sorted(diff) != sorted(expected_diff):
         diff_with_context = diff_texts(a=before, b=after, minimal=False)
         raise UnexpectedDiff(
             (
@@ -130,7 +136,7 @@ def test_bump_minor(fake_environment, tmp_path: Path):
         _name=my-super-package
         pkgname="${_name}-git"
         pkgver=0.0.1
-        pkgrel=1
+        pkgrel=2
         pkgdesc="Tool to backup/restore direnv files with optional encryption"
         source=("${_name}-${pkgver}::git+https://github.com/dtgoitia/${_name}.git")
         """
@@ -139,17 +145,19 @@ def test_bump_minor(fake_environment, tmp_path: Path):
     expected_diff = [
         "-pkgver=0.0.1",
         "+pkgver=0.1.0",
+        "-pkgrel=2",
+        "+pkgrel=1",
     ]
 
     pkgbuild_path.write_text(before)
 
     # Act
-    assert main(args=["minor"]) is None
+    assert update_pkgbuild_cmd(args=["--bump", "minor"]) is None
 
     # Assert
     after = pkgbuild_path.read_text()
     diff = diff_texts(a=before, b=after, minimal=True)
-    if diff != expected_diff:
+    if sorted(diff) != sorted(expected_diff):
         diff_with_context = diff_texts(a=before, b=after, minimal=False)
         raise UnexpectedDiff(
             (
@@ -174,7 +182,7 @@ def test_bump_major(fake_environment, tmp_path: Path):
         _name=my-super-package
         pkgname="${_name}-git"
         pkgver=0.0.1
-        pkgrel=1
+        pkgrel=2
         pkgdesc="Tool to backup/restore direnv files with optional encryption"
         source=("${_name}-${pkgver}::git+https://github.com/dtgoitia/${_name}.git")
         """
@@ -183,17 +191,63 @@ def test_bump_major(fake_environment, tmp_path: Path):
     expected_diff = [
         "-pkgver=0.0.1",
         "+pkgver=1.0.0",
+        "-pkgrel=2",
+        "+pkgrel=1",
     ]
 
     pkgbuild_path.write_text(before)
 
     # Act
-    assert main(args=["major"]) is None
+    assert update_pkgbuild_cmd(args=["--bump", "major"]) is None
 
     # Assert
     after = pkgbuild_path.read_text()
     diff = diff_texts(a=before, b=after, minimal=True)
-    if diff != expected_diff:
+    if sorted(diff) != sorted(expected_diff):
+        diff_with_context = diff_texts(a=before, b=after, minimal=False)
+        raise UnexpectedDiff(
+            (
+                "\n"
+                f"Expected this diff\n"
+                "\n"
+                f'{indent(join_lines(expected_diff), prefix="  ")}\n'
+                "\n"
+                "but got this instead:\n"
+                "\n"
+                f'{indent(diff_with_context, prefix="  ")}\n'
+            )
+        )
+
+
+def test_bump_pkgrel(fake_environment, tmp_path: Path):
+    pkgbuild_path = tmp_path / "PKGBUILD"
+    os.environ[LOCAL_AUR_REPO_DIR_ENVVAR_NAME] = str(pkgbuild_path.parent.absolute())
+
+    before = dedent(
+        """
+        _name=my-super-package
+        pkgname="${_name}-git"
+        pkgver=0.0.1
+        pkgrel=2
+        pkgdesc="Tool to backup/restore direnv files with optional encryption"
+        source=("${_name}-${pkgver}::git+https://github.com/dtgoitia/${_name}.git")
+        """
+    ).strip()
+
+    expected_diff = [
+        "-pkgrel=2",
+        "+pkgrel=3",
+    ]
+
+    pkgbuild_path.write_text(before)
+
+    # Act
+    assert update_pkgbuild_cmd(args=[]) is None
+
+    # Assert
+    after = pkgbuild_path.read_text()
+    diff = diff_texts(a=before, b=after, minimal=True)
+    if sorted(diff) != sorted(expected_diff):
         diff_with_context = diff_texts(a=before, b=after, minimal=False)
         raise UnexpectedDiff(
             (

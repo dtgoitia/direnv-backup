@@ -14,8 +14,8 @@ def diff_texts(a: str, b: str, minimal=False) -> list[str]:
     return result
 
 
-def join_lines(l: list[str]) -> str:
-    return "\n".join(l)
+def join_lines(lines: list[str]) -> str:
+    return "\n".join(lines)
 
 
 class UnexpectedDiff(Exception):
