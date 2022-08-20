@@ -47,13 +47,18 @@ def restore_file(backup: Path, config: Config) -> None:
     copy_file(src=backup, dst=final_path)
 
 
-def find_latest_backup(dir: Path, encrypted: bool) -> Path:
+def find_all_backups(dir: Path, encrypted: bool) -> list[Path]:
     if encrypted:
         extension = ".gpg"
     else:
         extension = ".tar"
 
-    backups = dir.glob(f"*{extension}")
+    backups = list(dir.glob(f"*{extension}"))
+    return backups
+
+
+def find_latest_backup(dir: Path, encrypted: bool) -> Path:
+    backups = find_all_backups(dir=dir, encrypted=encrypted)
 
     # backups include a timestamp at the begining of the file
     sorted_backups = sorted(backups)

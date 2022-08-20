@@ -9,6 +9,7 @@ from direnv_backup.archive import archive_dir
 from direnv_backup.config import Config
 from direnv_backup.encrypt import EncryptionError, encrypt
 from direnv_backup.io import copy_file
+from direnv_backup.restore import find_all_backups
 
 logger = logging.getLogger(__name__)
 
@@ -129,3 +130,17 @@ def backup(config: Config) -> None:
         finally:
             logger.debug(f"Cleaning up temporary archive: {archive_path}")
             archive_path.unlink()
+
+
+def remove_old_backups(config: Config) -> None:
+    max_backup_amount = 10
+    backups = find_all_backups(dir=config.backup_dir, encrypted=config.encrypt_backup)
+
+    sorted_backups = sorted(backups, reverse=True)
+
+    for i, backup in enumerate(sorted_backups):
+        if i < max_backup_amount:
+            continue
+
+        logger.debug(f"Deleting backup: {backup.absolute()}")
+        backup.unlink()

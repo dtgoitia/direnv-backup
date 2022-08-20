@@ -3,7 +3,7 @@ import logging
 import sys
 from pathlib import Path
 
-from direnv_backup.backup import backup
+from direnv_backup.backup import backup, remove_old_backups
 from direnv_backup.config import ConfigError, read_config
 from direnv_backup.encrypt import EncryptionError
 from direnv_backup.logging import set_up_logging_config
@@ -46,6 +46,8 @@ def main(args: list[str] | None = None) -> str | None:
         backup(config=config)
     except EncryptionError as error:
         return str(error)
+
+    remove_old_backups(config=config)
 
     return None
 
