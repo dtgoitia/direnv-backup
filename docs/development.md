@@ -52,8 +52,8 @@ You should be able to run this outside a container.
     # in ~/projects
     mkdir aur
     cd aur
-    git clone ssh://aur@aur.archlinux.org/direnv-backup.git
-    cd direnv-backup
+    git clone ssh://aur@aur.archlinux.org/direnv-backup-git.git
+    cd direnv-backup-git
     ```
 
 2. In the current repo, amend `PKGBUILD` as needed:
@@ -64,23 +64,27 @@ You should be able to run this outside a container.
 
     This command will:
 
-    - sync git tags, `pyroject.toml` metadata and `PKGBUILD` metadata
+    - sync `pyroject.toml` metadata and `PKGBUILD` metadata
     - push local `PKGBUILD` to local AUR repo
 
-3. Ensure that the above sync worked fine:
+    Make sure to commit current changes.
+
+3. Add git tag to current commit.
+
+4. Ensure that the above sync worked fine:
 
     ```bash
     python -m devex.cli.assert_pkgbuild_status
     ```
 
-4. Test `PKGBUILD` in container:
+5. Test `PKGBUILD` in container:
 
     ```bash
     docker-compose run --rm direnv-backup-only-pkgbuild \
       bash test_pkgbuild_file.sh
     ```
 
-5. Commit in local AUR repo and push to remote AUR:
+6. Commit in local AUR repo and push to remote AUR:
 
     ```bash
     $ pwd

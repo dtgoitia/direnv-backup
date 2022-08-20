@@ -21,7 +21,12 @@ import shutil
 import sys
 
 from devex.exceptions import MissingEnvironmentVariable
-from devex.pkgbuild import find_aur_pkgbuild_path, find_pkgbuild_path, sync_pkg_metadata
+from devex.pkgbuild import (
+    find_aur_pkgbuild_path,
+    find_pkgbuild_path,
+    generate_srcinfo,
+    sync_pkg_metadata,
+)
 from devex.pyproject import find_pyproject_path
 from devex.semver import SemVerBumpType
 
@@ -76,6 +81,9 @@ def update_pkgbuild_cmd(args: list[str] | None = None) -> str | None:
 
     aur_pkgbuild_path = find_aur_pkgbuild_path()
     shutil.copy(src=pkgbuild_path, dst=aur_pkgbuild_path)
+
+    logger.info("Generating .SRCINFO in aur local repo...")
+    generate_srcinfo(aur_dir=aur_pkgbuild_path.parent)
 
     return None
 

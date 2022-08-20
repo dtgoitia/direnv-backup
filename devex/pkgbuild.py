@@ -8,11 +8,7 @@ from textwrap import indent
 from typing import Callable
 
 from devex.exceptions import MissingEnvironmentVariable, UnexpectedScenario
-from devex.git import (
-    GitTagAlreadyExists,
-    create_tag_in_current_commit,
-    get_last_git_tag_version_in_master,
-)
+from devex.git import get_last_git_tag_version_in_master
 from devex.pyproject import get_pyproject_description, get_pyproject_version
 from devex.semver import SemVer, SemVerBumpType
 from tests.helpers.diff import diff_texts, join_lines
@@ -307,22 +303,6 @@ def set_pkgdesc(pkgbuild: RawPkgbuild, description: str) -> RawPkgbuild:
     )
 
 
-def sync_git_tag(version: SemVer) -> None:
-    """
-    Assumptions:
-        - tags are only created with this script - never manually
-        - existing tags are correct
-    """
-    try:
-        new_tag = str(version)
-        create_tag_in_current_commit(new_tag=new_tag)
-    except GitTagAlreadyExists:
-        raise GitTagAlreadyExists(
-            f"Git tag {new_tag!r} exists. This tag was not supposed to exist - manual"
-            " intervention required"
-        )
-
-
 def update_pyproject_version(path: Path, version: SemVer) -> None:
     pyproject = path.read_text()
 
@@ -344,10 +324,12 @@ def sync_pkg_metadata(
     Make sure that all metadata is aligned between git tags, pyproject.toml and PKGBUILD
     where metadata is: version, description, git tags, checksum, pkgrel
 
-    Bottom line, do not manually update:
-        - git tags
-        - pyproject.toml version
-        - PKGBUILD version
+    Bottom line:
+        do not manually update:
+            - pyproject.toml version
+            - PKGBUILD version
+        manually update:
+            - git tags
 
     """
     logger.info("Updating PKGBUILD...")
@@ -374,9 +356,6 @@ def sync_pkg_metadata(
         update_pyproject_version(path=pyproject_path, version=new_version)
         logger.info(f"Updating PKGBUILD pkgver to {new_version} ...")
         updated_pkgbuild = set_pkgver(pkgbuild=updated_pkgbuild, version=new_version)
-
-        logger.info(f"Creating git tag for version {new_version} ...")
-        sync_git_tag(version=pyproject_version)
 
         pkgver_changed = True
     else:
@@ -414,3 +393,23 @@ def sync_pkg_metadata(
         updated_pkgbuild = bump_pkgrel(pkgbuild=updated_pkgbuild)
 
     pkgbuild_path.write_text(updated_pkgbuild)
+
+
+def generate_srcinfo(aur_dir: Path) -> None:
+    original_workding_dir = Path.cwd()
+
+    os.chdir(str(aur_dir))
+    cmd = "makepkg --printsrcinfo"
+    proc = subprocess.run(cmd.split(" "), capture_output=True)
+    stdout = proc.stdout.decode("utf-8")
+    stderr = proc.stderr.decode("utf-8")
+
+    if proc.returncode != 0:
+        raise UnexpectedScenario(stderr)
+
+    srcinfo = stdout
+
+    os.chdir(original_workding_dir)
+
+    srcinfo_path = aur_dir / ".SRCINFO"
+    srcinfo_path.write_text(srcinfo)

@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from textwrap import dedent, indent
 from unittest import mock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -67,8 +68,7 @@ def test_find_aur_pkgbuild_path_if_env_var_path_is_a_file(fake_environment, tmp_
     )
 
 
-@mock.patch("devex.pkgbuild.sync_git_tag")
-def test_error_if_invalid_bump_type(fake_environment, tmp_path: Path):
+def test_error_if_invalid_bump_type(tmp_path: Path):
     with MockDevelopmentEnvironment(
         test_dir=tmp_path,
         pkgbuild="foo",
@@ -85,8 +85,8 @@ def test_semver_to_str():
     assert str(version) == "1.2.3"
 
 
-@mock.patch("devex.pkgbuild.sync_git_tag")
-def test_bump_patch(fake_environment, tmp_path: Path):
+@mock.patch("devex.cli.update_pkgbuild.generate_srcinfo")
+def test_bump_patch(generate_srcinfo: MagicMock, tmp_path: Path):
     pkgbuild = dedent(
         """
         _name=my-super-package
@@ -139,8 +139,8 @@ def test_bump_patch(fake_environment, tmp_path: Path):
         )
 
 
-@mock.patch("devex.pkgbuild.sync_git_tag")
-def test_bump_minor(fake_environment, tmp_path: Path):
+@mock.patch("devex.cli.update_pkgbuild.generate_srcinfo")
+def test_bump_minor(generate_srcinfo: MagicMock, tmp_path: Path):
     pkgbuild = dedent(
         """
         _name=my-super-package
@@ -195,8 +195,8 @@ def test_bump_minor(fake_environment, tmp_path: Path):
         )
 
 
-@mock.patch("devex.pkgbuild.sync_git_tag")
-def test_bump_major(fake_environment, tmp_path: Path):
+@mock.patch("devex.cli.update_pkgbuild.generate_srcinfo")
+def test_bump_major(generate_srcinfo: MagicMock, tmp_path: Path):
     pkgbuild = dedent(
         """
         _name=my-super-package
