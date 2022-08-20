@@ -1,5 +1,5 @@
 [Unit]
-Description=Run direnv-backup with user config.
+Description=back up with direnv-backup and user config
 
 [Service]
 Type=simple
