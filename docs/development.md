@@ -1,5 +1,13 @@
 ## Development
 
+## Install
+
+```shell
+python -m venv .venv
+. .venv/bin/activate
+make install-dev-tools install_development_dependencies
+```
+
 ### Build a wheel
 
 With development dependencies installed:
