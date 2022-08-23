@@ -1,11 +1,12 @@
 black
+docker
 flake8
+hatchling
 ipdb
-pudb
 isort
 mypy
 pip-tools
+pre-commit
+pudb
 pytest
-hatchling
-docker
 python-gnupg
