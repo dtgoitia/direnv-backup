@@ -1,7 +1,9 @@
 [Unit]
-Description=Schedule a backup of direnv files every hour
-RefuseManualStart=no  # Allow manual starts
-RefuseManualStop=no   # Allow manual stops
+Description=schedule to backup direnv files every hour
+# Allow manual starts
+RefuseManualStart=false
+# Allow manual stops
+RefuseManualStop=false
 
 [Timer]
 # Do not execute job if it missed a run due to machine being off
