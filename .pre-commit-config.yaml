@@ -58,11 +58,3 @@ repos:
         files: (pyproject.toml|PKGBUILD)
         pass_filenames: false  # do not pass files in `files` to the command in`entry`
         verbose: false  # only show output on failure
-
-      - id: systemd
-        name: systemd
-        entry: python -m devex.cli.assert_docs_are_up_to_date --verbose
-        language: system
-        files: (systemd/.*|README\.md)
-        pass_filenames: false  # do not pass files in `files` to the command in`entry`
-        verbose: false  # only show output on failure
