@@ -33,8 +33,7 @@ lint:
 	flake8
 	black --check --diff .
 	isort --check --diff .
-	python -m mypy --config-file setup.cfg --pretty ./direnv_backup
-	python -m mypy --config-file setup.cfg --pretty ./devex
+	python -m mypy --config-file setup.cfg --pretty .
 
 format:
 	isort .

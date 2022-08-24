@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import subprocess
 from pathlib import Path
+from typing import Any
 
 from devex.pkgbuild import (
     LOCAL_AUR_REPO_DIR_ENVVAR_NAME,
@@ -117,14 +118,14 @@ class MockDevelopmentEnvironment:
         change_working_directory(to=self.repo_dir)
 
         self.previous_environment = os.environ
-        os.environ = self.previous_environment.copy()
+        os.environ = self.previous_environment.copy()  # type: ignore
         os.environ[LOCAL_AUR_REPO_DIR_ENVVAR_NAME] = str(
             self.aur_pkbuild_path.parent.absolute()
         )
 
         return self
 
-    def __exit__(self, ext_type, exc_value, exc_tb) -> None:
+    def __exit__(self, ext_type: Any, exc_value: Any, exc_tb: Any) -> None:
         change_working_directory(to=self.previous_working_dir)
 
         os.environ = self.previous_environment
