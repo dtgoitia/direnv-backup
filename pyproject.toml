@@ -1,6 +1,6 @@
 [project]
 name = "direnv_backup"
-version = "0.1.0"
+version = "0.1.1"
 authors = [
   { name="David Torralba Goitia", email="david.torralba.goitia@gmail.com" },
 ]
@@ -25,4 +25,3 @@ build-backend = "hatchling.build"
 [project.scripts]
 direnv-backup = "direnv_backup.cli.backup:main"
 direnv-restore = "direnv_backup.cli.restore:main"
-
