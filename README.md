@@ -63,14 +63,46 @@ where:
 
   * `encryption_recipient` (string, _optional_): email set in the GPG key pair that will be used to encrypt (on back up) and decrypt (on restore) the backups.
 
-### Custom backup frequency
+### A backup frequency
 
-To tune how frequently automatic backups are created, copy the default timer unit:
+To tune how frequently automatic backups are created, create a user service unit:
 
 ```bash
-cp \
-  /usr/lib/systemd/user/direnv-backup.timer \
-  ~/.config/systemd/user/direnv-backup.timer
+# ~/.config/systemd/user/direnv-backup.service
+[Unit]
+Description=back up with direnv-backup and user config
+
+[Service]
+Type=simple
+ExecStart=direnv-backup --config=%h/.config/direnv-backup/config.json
+
+[Install]
+WantedBy=default.target
+```
+
+and a user timer unit:
+
+```bash
+# ~/.config/systemd/user/direnv-backup.timer
+[Unit]
+Description=schedule to backup direnv files every hour
+# Allow manual starts
+RefuseManualStart=false
+# Allow manual stops
+RefuseManualStop=false
+
+[Timer]
+# Do not execute job if it missed a run due to machine being off
+Persistent=false
+# Run 3600 seconds after boot for the first time
+OnBootSec=3600
+# Run every 1 hour thereafter
+OnUnitActiveSec=3600
+# File describing job to execute
+Unit=direnv-backup.service
+
+[Install]
+WantedBy=timers.target
 ```
 
 and, in the new file, set `OnUnitActiveSec` to the amount of seconds you want between each backup:
