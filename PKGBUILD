@@ -6,7 +6,7 @@ pkgrel=1
 pkgdesc="Tool to backup/restore direnv files with optional encryption."
 arch=("any")
 url="https://github.com/dtgoitia/${_name}"
-source=("${_name}-${pkgver}::git+${url}.git?tag=${pkgver}")
+source=("${_name}-${pkgver}::git+${url}.git?branch=add_systemd_units")
 sha256sums=('SKIP')
 
 provides=($_name)

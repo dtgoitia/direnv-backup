@@ -1,0 +1,46 @@
+- Remove unnecessary test and scripts, and keep:
+  - in a container without dev-deps
+    - [x] test PKGBUILD produces pacman package correctly
+    - [x] test PKGBUILD installs pacman package correctly (aka, command is found after installation, but do not test the command)
+  - in a container with dev-deps:
+    - [x] test wheel is built correctly
+    - [x] after installing wheel, the expected CLI command is available
+    - [x] test the Python logic invoked by the CLI, but without building or installing the wheel (usual unit/integration tests at Python level)
+  - delete BASH scripts that are not needed anymore
+
+- [ ] Add CI in GitHub actions for development branches and for master - think if they have to be different flows or they are the same
+- [x] Update command names in pyproject.toml
+- [x] Add "restore" command name in pyproject.toml
+- [x] Add script to automatically generate new pkgbuild from template.
+- [x] Add script to push pkgbuild to local AUR repo.
+
+- systemd units:
+  - Find out where to save them:
+    - packages: `/usr/lib/systemd/user/` (PKBGUILD should save units here)
+    - user manually: `~/.config/systemd/user/` (use this for development)
+  - [x] Add dotfiles with required config
+  - Before trying the systemd units, just make your first PKGBUILD public, and install the package via PKGBUILD
+    - pro: you have something working
+    - pro: you test that the service unit tries to run the script from the right path
+  - [x] Create systemd service unit
+  - [x] Test systemd service unit
+  - [x] Create systemd timer unit
+  - [ ] Update PKGBUILD to install systemd unit to regularly run the backup command
+- [ ] Delete the symlink added at ~/.config/systemd/user/direnv-backup.service - it was added for manual testing
+- [ ] Delete the symlink added at ~/.config/systemd/user/direnv-backup.timer - it was added for manual testing
+- [x] Document how to use the systemd unit
+- [x] Document how to use the restore CLI
+- [x] Document how to use the backup CLI
+- [x] Document required config file
+- [ ] Add git commit hooks for isort, flake8, black, mypy, etc.
+- [ ] When you install the PKGBUILD and run `aurman -Qi direnv-backup` you see some attributes that look odd: "Validated By: None", or "Packager: Unknown Packager", etc. Have a look to those and fix them
+- [ ] Tidy up PKGBUILD
+- [ ] On backup script, add logs to show where the output has been saved (see systemd service logs)
+- [ ] On restore script, ensure you can restore also from tar file - aka without encryption
+- [ ] docs: in Configuration, ensure that the src path of the default systemd timer unit is correct
+- [ ] pre-commit: on commit, check if the git tag has changed and if it has, trigger PKGBUILD update, and print message to push
+  - on every commit ensure pyproject.toml version, last tag, and PKGBUILD version is aligned
+  - on every commit ensure pyproject.toml description, and PKGBUILD pkgdesc is aligned
+
+- interpolate envvars in config paths
+  - pro: not necessary to hardcode a value in the config

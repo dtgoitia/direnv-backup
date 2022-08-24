@@ -44,7 +44,7 @@ test:
 		pytest -vv -s .
 
 test_pkgbuild:
-	docker-compose run --rm direnv-backup-only-pkgbuild bash test_pkgbuild_file.sh
+	docker-compose run --rm direnv-backup-only-pkgbuild fish
 
 shell_in_container:
 	docker-compose run --rm direnv-backup-with-dev-deps \
@@ -62,3 +62,7 @@ assert_pkgbuild_status:
 
 update_pkgbuild:
 	python -m devex.cli.update_pkgbuild --verbose
+
+install_pkgbuild_from_branch:
+	docker-compose run --rm direnv-backup-only-pkgbuild \
+		bash install_pkgbuild_from_branch.sh
